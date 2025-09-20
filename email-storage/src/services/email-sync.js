@@ -213,6 +213,7 @@ export class EmailSyncService {
         const emails = await this.fastmailClient.getEmails({
           since: lastSyncToken,
           limit: batchSize
+          // Note: Not passing sort parameter to avoid unsupportedSort error
         });
 
         if (emails.length === 0) {

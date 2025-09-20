@@ -195,7 +195,7 @@ export class FastmailJMAPClient {
       mailboxIds = null,
       since = null,
       limit = 100,
-      sort = [{ property: 'date', isAscending: false }]
+      sort = null
     } = options;
 
     // First, query for email IDs
@@ -213,6 +213,11 @@ export class FastmailJMAPClient {
       queryParams.filter.since = since;
     }
 
+    // Only add sort if specified and supported
+    if (sort && Array.isArray(sort) && sort.length > 0) {
+      queryParams.sort = sort;
+    }
+
     const queryResponse = await this.makeJMAPCall(
       [JMAP_CAPABILITIES.CORE, JMAP_CAPABILITIES.MAIL],
       [
@@ -223,11 +228,15 @@ export class FastmailJMAPClient {
     const queryMethodResponse = queryResponse.getMethodResponse(JMAP_METHODS.EMAIL_QUERY, 'query-emails');
     console.log('Query response:', JSON.stringify(queryResponse, null, 2));
     console.log('Query method response:', queryMethodResponse);
+    
     if (!queryMethodResponse) {
       throw new Error('Email query failed: No response received');
     }
+    
     if (queryMethodResponse[0] === 'error') {
-      throw new Error(`Email query failed: ${JSON.stringify(queryMethodResponse[1])}`);
+      const errorDetails = queryMethodResponse[1];
+      console.error('JMAP Query Error:', errorDetails);
+      throw new Error(`Email query failed: ${errorDetails.type} - ${JSON.stringify(errorDetails)}`);
     }
 
     const emailIds = queryMethodResponse[1].ids || [];
