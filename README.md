@@ -37,6 +37,7 @@ A comprehensive privacy architecture designed to protect individuals from malici
 - [x] **Phone System:** Hushed for SMS-required services
 - [x] **Payment System:** Privacy.com virtual cards
 - [x] **Service Migration:** Monarch, Netflix, Zoom (in progress)
+- [x] **Email Storage:** Complete email archival with Supabase integration
 
 ### Active Subscriptions Migrated
 - [x] Monarch Budget → monarch@softmoth.com
@@ -66,7 +67,8 @@ A comprehensive privacy architecture designed to protect individuals from malici
 2. **2FA:** Always choose TOTP in 1Password over SMS
 3. **Phone:** Use Hushed only when SMS is required
 4. **Payment:** Create new Privacy.com card per service
-5. **Document:** Save everything in 1Password immediately
+5. **Email Storage:** Deploy email archival system (optional)
+6. **Document:** Save everything in 1Password immediately
 
 ## 📚 Documentation
 
@@ -75,6 +77,7 @@ A comprehensive privacy architecture designed to protect individuals from malici
 - **[Security Analysis](docs/security.md)** - Threat model and protections
 - **[Cost Analysis](docs/costs.md)** - Detailed cost breakdown
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues
+- **[Email Storage](email-storage/README.md)** - Complete email archival system
 
 ## 🔧 Maintenance
 
