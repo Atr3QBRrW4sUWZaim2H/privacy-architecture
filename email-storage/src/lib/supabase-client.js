@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 import { 
   StoredEmail, 
   StoredMailbox, 
@@ -494,7 +495,6 @@ export class EmailStorageService {
    * Generate content hash for change detection
    */
   generateContentHash(content) {
-    const crypto = require('crypto');
     return crypto.createHash('md5').update(content).digest('hex');
   }
 
