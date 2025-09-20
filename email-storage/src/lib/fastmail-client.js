@@ -202,7 +202,6 @@ export class FastmailJMAPClient {
     const queryParams = {
       accountId: this.accountId,
       filter: {},
-      sort: sort,
       limit: limit
     };
 
