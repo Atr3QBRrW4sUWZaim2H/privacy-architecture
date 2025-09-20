@@ -1,0 +1,18 @@
+{
+  "monthly_costs": {
+    "fastmail": 5.00,
+    "hushed": 5.00,
+    "domain": 1.25,
+    "privacy": 0.00,
+    "total": 11.25
+  },
+  "annual_costs": {
+    "domain_renewal": 15.00,
+    "total_annual": 135.00
+  },
+  "tracking": {
+    "start_date": "2024-09-19",
+    "last_updated": "2024-09-19",
+    "currency": "USD"
+  }
+}

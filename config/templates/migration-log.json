@@ -1,0 +1,19 @@
+{
+  "migrations": [
+    {
+      "date": "2024-09-19",
+      "service": "monarch",
+      "email": "monarch@softmoth.com",
+      "2fa": "totp",
+      "payment": "privacy-card-001",
+      "status": "completed",
+      "notes": "Successfully migrated Monarch Budget service"
+    }
+  ],
+  "statistics": {
+    "total_migrated": 0,
+    "successful": 0,
+    "failed": 0,
+    "pending": 0
+  }
+}

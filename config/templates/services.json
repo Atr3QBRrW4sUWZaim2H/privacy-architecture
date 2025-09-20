@@ -1,0 +1,36 @@
+{
+  "services": {
+    "email": {
+      "provider": "fastmail",
+      "domain": "softmoth.com",
+      "aliases": []
+    },
+    "phone": {
+      "provider": "hushed",
+      "numbers": []
+    },
+    "payment": {
+      "provider": "privacy",
+      "cards": []
+    },
+    "2fa": {
+      "provider": "1password",
+      "tokens": []
+    }
+  },
+  "migration": {
+    "completed": [],
+    "pending": [],
+    "failed": []
+  },
+  "costs": {
+    "monthly": 11.25,
+    "annual": 135,
+    "breakdown": {
+      "fastmail": 5.00,
+      "hushed": 5.00,
+      "domain": 1.25,
+      "privacy": 0.00
+    }
+  }
+}
