@@ -10,6 +10,16 @@ A comprehensive privacy architecture designed to protect individuals from malici
 
 ## 🏗️ Architecture Layers
 
+### Email Processing Integration
+The privacy architecture now includes a sophisticated **Email Agent** system that provides:
+- **AI-Powered Analysis**: Uses local vLLM for intelligent email categorization and processing
+- **Automated Management**: Smart email organization, archiving, and response generation
+- **Privacy-First Storage**: All email data stored in your homelab Supabase instance
+- **Prefect Orchestration**: Production-ready workflow management and monitoring
+- **Docker Deployment**: Containerized for easy deployment and maintenance
+
+The Email Agent integrates seamlessly with the Fastmail + softmoth.com domain setup, providing advanced email management while maintaining the privacy abstraction layer.
+
 ### Layer 1: Foundation Identity (Never Exposed)
 - **Real Name:** Government, employer, banking only
 - **Real Address:** Government, utilities, critical services only  
@@ -37,7 +47,7 @@ A comprehensive privacy architecture designed to protect individuals from malici
 - [x] **Phone System:** Hushed for SMS-required services
 - [x] **Payment System:** Privacy.com virtual cards
 - [x] **Service Migration:** Monarch, Netflix, Zoom (in progress)
-- [x] **Email Storage:** Complete email archival with Supabase integration
+- [x] **Email Processing:** Advanced AI-powered email management with Supabase integration
 
 ### Active Subscriptions Migrated
 - [x] Monarch Budget → monarch@softmoth.com
@@ -67,7 +77,7 @@ A comprehensive privacy architecture designed to protect individuals from malici
 2. **2FA:** Always choose TOTP in 1Password over SMS
 3. **Phone:** Use Hushed only when SMS is required
 4. **Payment:** Create new Privacy.com card per service
-5. **Email Storage:** Deploy email archival system (optional)
+5. **Email Processing:** Deploy AI-powered email management system (optional)
 6. **Document:** Save everything in 1Password immediately
 
 ## 📚 Documentation
@@ -77,7 +87,7 @@ A comprehensive privacy architecture designed to protect individuals from malici
 - **[Security Analysis](docs/security.md)** - Threat model and protections
 - **[Cost Analysis](docs/costs.md)** - Detailed cost breakdown
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues
-- **[Email Storage](email-storage/README.md)** - Complete email archival system
+- **[Email Agent](email-agent/docs/README.md)** - AI-powered email processing and management system
 
 ## 🔧 Maintenance
 
