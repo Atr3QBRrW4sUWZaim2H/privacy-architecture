@@ -228,7 +228,7 @@ export class FastmailJMAPClient {
       throw new Error('Email query failed: No response received');
     }
     if (queryMethodResponse[0] === 'error') {
-      throw new Error(`Email query failed: ${queryMethodResponse[1]}`);
+      throw new Error(`Email query failed: ${JSON.stringify(queryMethodResponse[1])}`);
     }
 
     const emailIds = queryMethodResponse[1].ids || [];
