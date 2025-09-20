@@ -27,16 +27,28 @@ export class EmailStorageService {
       const storedEmail = email instanceof StoredEmail ? email : StoredEmail.fromFastmailEmail(email);
       const row = storedEmail.toSupabaseRow();
 
-      const { data, error } = await this.supabase
+      // First try to insert the email
+      let { data, error } = await this.supabase
         .from('emails')
-        .upsert(row, { 
-          onConflict: 'fastmail_id',
-          ignoreDuplicates: false 
-        })
+        .insert(row)
         .select()
         .single();
 
-      if (error) {
+      // If insert fails due to duplicate, try to update instead
+      if (error && error.code === '23505') { // Unique violation
+        console.log(`Email ${row.fastmail_id} already exists, updating...`);
+        const { data: updateData, error: updateError } = await this.supabase
+          .from('emails')
+          .update(row)
+          .eq('fastmail_id', row.fastmail_id)
+          .select()
+          .single();
+        
+        if (updateError) {
+          throw new Error(`Failed to update email: ${updateError.message}`);
+        }
+        data = updateData;
+      } else if (error) {
         throw new Error(`Failed to store email: ${error.message}`);
       }
 
@@ -54,30 +66,53 @@ export class EmailStorageService {
    */
   async storeEmails(emails) {
     try {
-      const rows = emails.map(email => {
-        const storedEmail = email instanceof StoredEmail ? email : StoredEmail.fromFastmailEmail(email);
-        return storedEmail.toSupabaseRow();
-      });
-
-      const { data, error } = await this.supabase
-        .from('emails')
-        .upsert(rows, { 
-          onConflict: 'fastmail_id',
-          ignoreDuplicates: false 
-        })
-        .select();
-
-      if (error) {
-        throw new Error(`Failed to store emails: ${error.message}`);
+      const results = [];
+      
+      // Process emails one by one to handle conflicts properly
+      for (const email of emails) {
+        try {
+          const storedEmail = email instanceof StoredEmail ? email : StoredEmail.fromFastmailEmail(email);
+          const row = storedEmail.toSupabaseRow();
+          
+          // First try to insert the email
+          let { data, error } = await this.supabase
+            .from('emails')
+            .insert(row)
+            .select()
+            .single();
+          
+          // If insert fails due to duplicate, try to update instead
+          if (error && error.code === '23505') { // Unique violation
+            console.log(`Email ${row.fastmail_id} already exists, updating...`);
+            const { data: updateData, error: updateError } = await this.supabase
+              .from('emails')
+              .update(row)
+              .eq('fastmail_id', row.fastmail_id)
+              .select()
+              .single();
+            
+            if (updateError) {
+              console.error(`Failed to update email ${row.fastmail_id}:`, updateError);
+              continue;
+            }
+            data = updateData;
+          } else if (error) {
+            console.error(`Failed to store email ${row.fastmail_id}:`, error);
+            continue;
+          }
+          
+          if (data) {
+            results.push(data);
+            // Update search index
+            await this.updateSearchIndex(data.id, storedEmail);
+          }
+        } catch (emailError) {
+          console.error(`Error processing email:`, emailError);
+          continue;
+        }
       }
 
-      // Update search indexes
-      for (let i = 0; i < data.length; i++) {
-        const storedEmail = StoredEmail.fromFastmailEmail(emails[i]);
-        await this.updateSearchIndex(data[i].id, storedEmail);
-      }
-
-      return data;
+      return results;
     } catch (error) {
       throw new Error(`Batch email storage failed: ${error.message}`);
     }
@@ -91,16 +126,28 @@ export class EmailStorageService {
       const storedMailbox = mailbox instanceof StoredMailbox ? mailbox : StoredMailbox.fromFastmailMailbox(mailbox);
       const row = storedMailbox.toSupabaseRow();
 
-      const { data, error } = await this.supabase
+      // First try to insert the mailbox
+      let { data, error } = await this.supabase
         .from('mailboxes')
-        .upsert(row, { 
-          onConflict: 'fastmail_id',
-          ignoreDuplicates: false 
-        })
+        .insert(row)
         .select()
         .single();
 
-      if (error) {
+      // If insert fails due to duplicate, try to update instead
+      if (error && error.code === '23505') { // Unique violation
+        console.log(`Mailbox ${row.fastmail_id} already exists, updating...`);
+        const { data: updateData, error: updateError } = await this.supabase
+          .from('mailboxes')
+          .update(row)
+          .eq('fastmail_id', row.fastmail_id)
+          .select()
+          .single();
+        
+        if (updateError) {
+          throw new Error(`Failed to update mailbox: ${updateError.message}`);
+        }
+        data = updateData;
+      } else if (error) {
         throw new Error(`Failed to store mailbox: ${error.message}`);
       }
 
@@ -120,17 +167,47 @@ export class EmailStorageService {
         return storedMailbox.toSupabaseRow();
       });
 
-      const { data, error } = await this.supabase
-        .from('mailboxes')
-        .upsert(rows, { 
-          onConflict: 'fastmail_id',
-          ignoreDuplicates: false 
-        })
-        .select();
+      // Process mailboxes one by one to handle conflicts properly
+      const results = [];
+      for (const row of rows) {
+        try {
+          // First try to insert the mailbox
+          let { data, error } = await this.supabase
+            .from('mailboxes')
+            .insert(row)
+            .select()
+            .single();
 
-      if (error) {
-        throw new Error(`Failed to store mailboxes: ${error.message}`);
+          // If insert fails due to duplicate, try to update instead
+          if (error && error.code === '23505') { // Unique violation
+            console.log(`Mailbox ${row.fastmail_id} already exists, updating...`);
+            const { data: updateData, error: updateError } = await this.supabase
+              .from('mailboxes')
+              .update(row)
+              .eq('fastmail_id', row.fastmail_id)
+              .select()
+              .single();
+            
+            if (updateError) {
+              console.error(`Failed to update mailbox ${row.fastmail_id}:`, updateError);
+              continue;
+            }
+            data = updateData;
+          } else if (error) {
+            console.error(`Failed to store mailbox ${row.fastmail_id}:`, error);
+            continue;
+          }
+          
+          if (data) {
+            results.push(data);
+          }
+        } catch (mailboxError) {
+          console.error(`Error processing mailbox:`, mailboxError);
+          continue;
+        }
       }
+      
+      const data = results;
 
       return data;
     } catch (error) {
@@ -146,16 +223,28 @@ export class EmailStorageService {
       const storedThread = thread instanceof EmailThread ? thread : EmailThread.fromFastmailThread(thread);
       const row = storedThread.toSupabaseRow();
 
-      const { data, error } = await this.supabase
+      // First try to insert the thread
+      let { data, error } = await this.supabase
         .from('email_threads')
-        .upsert(row, { 
-          onConflict: 'id',
-          ignoreDuplicates: false 
-        })
+        .insert(row)
         .select()
         .single();
 
-      if (error) {
+      // If insert fails due to duplicate, try to update instead
+      if (error && error.code === '23505') { // Unique violation
+        console.log(`Thread ${row.id} already exists, updating...`);
+        const { data: updateData, error: updateError } = await this.supabase
+          .from('email_threads')
+          .update(row)
+          .eq('id', row.id)
+          .select()
+          .single();
+        
+        if (updateError) {
+          throw new Error(`Failed to update thread: ${updateError.message}`);
+        }
+        data = updateData;
+      } else if (error) {
         throw new Error(`Failed to store thread: ${error.message}`);
       }
 

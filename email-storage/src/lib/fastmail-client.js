@@ -226,8 +226,6 @@ export class FastmailJMAPClient {
     );
 
     const queryMethodResponse = queryResponse.getMethodResponse(JMAP_METHODS.EMAIL_QUERY, 'query-emails');
-    console.log('Query response:', JSON.stringify(queryResponse, null, 2));
-    console.log('Query method response:', queryMethodResponse);
     
     if (!queryMethodResponse) {
       throw new Error('Email query failed: No response received');
@@ -235,7 +233,6 @@ export class FastmailJMAPClient {
     
     if (queryMethodResponse[0] === 'error') {
       const errorDetails = queryMethodResponse[1];
-      console.error('JMAP Query Error:', errorDetails);
       throw new Error(`Email query failed: ${errorDetails.type} - ${JSON.stringify(errorDetails)}`);
     }
 
