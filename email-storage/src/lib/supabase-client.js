@@ -379,23 +379,42 @@ export class EmailStorageService {
    */
   async updateSyncState(accountId, syncData) {
     try {
-      const { data, error } = await this.supabase
+      // First try to insert the sync state
+      let { data, error } = await this.supabase
         .from('sync_state')
-        .upsert({
+        .insert({
           account_id: accountId,
           last_sync_token: syncData.lastSyncToken,
           last_sync_date: syncData.lastSyncDate?.toISOString(),
           total_emails_synced: syncData.totalEmailsSynced,
           last_error: syncData.lastError,
           sync_status: syncData.syncStatus
-        }, {
-          onConflict: 'account_id'
         })
         .select()
         .single();
 
-      if (error) {
-        throw new Error(`Failed to update sync state: ${error.message}`);
+      // If insert fails due to duplicate, try to update instead
+      if (error && error.code === '23505') { // Unique violation
+        console.log(`Sync state for account ${accountId} already exists, updating...`);
+        const { data: updateData, error: updateError } = await this.supabase
+          .from('sync_state')
+          .update({
+            last_sync_token: syncData.lastSyncToken,
+            last_sync_date: syncData.lastSyncDate?.toISOString(),
+            total_emails_synced: syncData.totalEmailsSynced,
+            last_error: syncData.lastError,
+            sync_status: syncData.syncStatus
+          })
+          .eq('account_id', accountId)
+          .select()
+          .single();
+        
+        if (updateError) {
+          throw new Error(`Failed to update sync state: ${updateError.message}`);
+        }
+        data = updateData;
+      } else if (error) {
+        throw new Error(`Failed to store sync state: ${error.message}`);
       }
 
       return data;
@@ -440,18 +459,31 @@ export class EmailStorageService {
         email.bodyHtml || ''
       ].join(' ');
 
-      const { error } = await this.supabase
+      // First try to insert the search index
+      let { error } = await this.supabase
         .from('email_search')
-        .upsert({
+        .insert({
           email_id: emailId,
           search_vector: searchContent,
           content_hash: this.generateContentHash(searchContent)
-        }, {
-          onConflict: 'email_id'
         });
 
-      if (error) {
-        throw new Error(`Failed to update search index: ${error.message}`);
+      // If insert fails due to duplicate, try to update instead
+      if (error && error.code === '23505') { // Unique violation
+        console.log(`Search index for email ${emailId} already exists, updating...`);
+        const { error: updateError } = await this.supabase
+          .from('email_search')
+          .update({
+            search_vector: searchContent,
+            content_hash: this.generateContentHash(searchContent)
+          })
+          .eq('email_id', emailId);
+        
+        if (updateError) {
+          throw new Error(`Failed to update search index: ${updateError.message}`);
+        }
+      } else if (error) {
+        throw new Error(`Failed to create search index: ${error.message}`);
       }
     } catch (error) {
       console.warn(`Search index update failed: ${error.message}`);

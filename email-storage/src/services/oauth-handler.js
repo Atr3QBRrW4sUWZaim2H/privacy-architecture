@@ -295,9 +295,10 @@ export class OAuthHandlerService {
       // In production, encrypt the token before storing
       const encryptedToken = this.encryptToken(token);
       
-      const { error } = await this.storageService.supabase
+      // First try to insert the token
+      let { error } = await this.storageService.supabase
         .from('oauth_tokens')
-        .upsert({
+        .insert({
           account_id: accountId,
           access_token: encryptedToken.accessToken,
           refresh_token: encryptedToken.refreshToken,
@@ -306,11 +307,27 @@ export class OAuthHandlerService {
           scope: token.scope,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'account_id'
         });
 
-      if (error) {
+      // If insert fails due to duplicate, try to update instead
+      if (error && error.code === '23505') { // Unique violation
+        console.log(`OAuth token for account ${accountId} already exists, updating...`);
+        const { error: updateError } = await this.storageService.supabase
+          .from('oauth_tokens')
+          .update({
+            access_token: encryptedToken.accessToken,
+            refresh_token: encryptedToken.refreshToken,
+            token_type: token.tokenType,
+            expires_at: token.expiresAt.toISOString(),
+            scope: token.scope,
+            updated_at: new Date().toISOString()
+          })
+          .eq('account_id', accountId);
+        
+        if (updateError) {
+          throw new Error(`Failed to update token: ${updateError.message}`);
+        }
+      } else if (error) {
         throw new Error(`Failed to store token: ${error.message}`);
       }
 
